@@ -10,3 +10,4 @@ model.fit(X)
 
 print("labels: \n", model.labels_)
 print("cluster centers: \n", model.cluster_centers_)
+print("predict result: \n", model.predict(X))
