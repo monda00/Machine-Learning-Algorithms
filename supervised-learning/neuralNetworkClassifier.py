@@ -1,13 +1,13 @@
 from sklearn.datasets import load_wine
 from sklearn.model_selection import train_test_split
-from keras import models
-from keras import layers
-from keras.utils import np_utils
+from tensorflow.keras import models
+from tensorflow.keras import layers
+from tensorflow.keras import utils
 
 # データの読み込み
 boston = load_wine()
 X = boston['data']
-y = np_utils.to_categorical(boston['target'])
+y = utils.to_categorical(boston['target'])
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
 
 model = models.Sequential()

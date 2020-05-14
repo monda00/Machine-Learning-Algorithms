@@ -1,7 +1,7 @@
 from sklearn.datasets import load_boston
 from sklearn.model_selection import train_test_split
-from keras import models
-from keras import layers
+from tensorflow.keras import models
+from tensorflow.keras import layers
 
 # データの読み込み
 boston = load_boston()
