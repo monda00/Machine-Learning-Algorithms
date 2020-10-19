@@ -9,7 +9,7 @@ for i_episode in range(20):
     for t in range(100):
         env.render()
         print(observation)
-        # アクションの決定
+        # アクションの決定(ランダム)
         action = env.action_space.sample()
         # アクション後のデータを取得
         observation, reward, done, info = env.step(action)
