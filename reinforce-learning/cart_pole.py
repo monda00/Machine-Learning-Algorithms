@@ -1,7 +1,9 @@
 import gym
+from gym import wrappers
 
 # 環境の生成
 env = gym.make('CartPole-v0')
+env = wrappers.Monitor(env, './movie')
 
 for i_episode in range(20):
     # 環境を初期化してobsersavationを取得
