@@ -1,49 +1,43 @@
-from sklearn.datasets import load_wine
+from sklearn.datasets import load_boston
+from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import KFold, train_test_split
-from sklearn.metrics import accuracy_score
-from tensorflow.keras import models
-from tensorflow.keras import layers
-from tensorflow.keras import utils
 from tensorflow.keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, EarlyStopping
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import Sequential
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def build_model(n_features):
-    model = models.Sequential()
-    model.add(layers.Dense(64, activation='relu',
-                           input_shape=(n_features,)))
-    model.add(layers.Dense(64, activation='relu'))
-    model.add(layers.Dense(3, activation='softmax'))
-    model.compile(optimizer='rmsprop',
-                  loss='categorical_crossentropy', metrics=['accuracy'])
+    model = Sequential()
+    model.add(Dense(64, activation='relu', input_shape=(n_features,)))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dense(1))
+    model.compile(optimizer='rmsprop', loss='mse', metrics=['mae'])
     return model
 
 
 # データの読み込み
-boston = load_wine()
+boston = load_boston()
 X, X_test, y, y_test = train_test_split(
-    boston['data'], utils.to_categorical(boston['target']), test_size=0.3, random_state=0)
-
+    boston['data'], boston['target'], test_size=0.3, random_state=0)
 
 # k-fold cross validation
 FOLD = 5
 EPOCH = 10
 BATCH_SIZE = 32
 
-oof = np.zeros(y.shape)
-scores = []
-y_preds = []
+valid_scores = []
 histories = []
+models = []
 kf = KFold(n_splits=FOLD, shuffle=True, random_state=42)
 
 for fold, (train_indices, valid_indices) in enumerate(kf.split(X)):
-    print(f'fold {fold}')
-
     X_train, X_valid = X[train_indices], X[valid_indices]
     y_train, y_valid = y[train_indices], y[valid_indices]
 
-    model = build_model(X_train[1])
+    model = build_model(X_train.shape[1])
     rlr = ReduceLROnPlateau(monitor='val_loss',
                             factor=0.1,
                             patience=3,
@@ -72,14 +66,21 @@ for fold, (train_indices, valid_indices) in enumerate(kf.split(X)):
                         verbose=0)
     histories.append(hostory)
 
-    oof[valid_indices] += model.predict(X_valid,
-                                        num_iteration=model.best_iteration)
-    score = accuracy_score(y_valid, oof[valid_indices])
-    print(f'fold {fold} ACCURACY: {score}')
-    scores.append(score)
+    y_valid_pred = model.predict(X_valid)
+    score = mean_absolute_error(y_valid, y_valid_pred)
+    print(f'fold {fold} MAE: {score}')
+    valid_scores.append(score)
 
-    y_pred = model.predict(X_test, num_iteration=model.best_iteration)
-    y_preds.append(y_pred)
+    models.append(model)
 
-cv_score = sum(scores) / FOLD
+
+cv_score = np.mean(valid_scores)
 print(f'CV score: {cv_score}')
+
+plt.plot(histories[0].history['loss'])
+plt.plot(histories[0].history['val_loss'])
+plt.title('Model loss')
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
+plt.legend(['Train', 'Test'], loc='upper left')
+plt.show()
